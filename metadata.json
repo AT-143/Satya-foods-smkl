@@ -1,0 +1,6 @@
+{
+  "name": "AI-Powered E-Commerce Platform",
+  "description": "Full-featured e-commerce application with product catalog, search, cart, checkout, order tracking, and admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "products": {
+      "title": "Products",
+      "description": "Store items with pricing, category, stock and details",
+      "properties": {
+        "id": { "type": "string" },
+        "nameTe": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "category": { "type": "string" },
+        "pricePerKg": { "type": "number" },
+        "image": { "type": "string" },
+        "descriptionTe": { "type": "string" },
+        "descriptionEn": { "type": "string" },
+        "ingredientsTe": { "type": "array" },
+        "ingredientsEn": { "type": "array" },
+        "shelfLife": { "type": "string" },
+        "isPureOrganic": { "type": "boolean" },
+        "isBestSeller": { "type": "boolean" },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "stockKg": { "type": "number" }
+      },
+      "required": ["nameTe", "nameEn", "category", "pricePerKg"]
+    },
+    "orders": {
+      "title": "Orders",
+      "description": "Customer orders and fulfillment details",
+      "properties": {
+        "id": { "type": "string" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "customer": { "type": "object" },
+        "paymentMethod": { "type": "string" },
+        "paymentStatus": { "type": "string" },
+        "status": { "type": "string" },
+        "date": { "type": "string" }
+      },
+      "required": ["items", "totalAmount", "customer", "status"]
+    },
+    "reviews": {
+      "title": "Reviews",
+      "description": "Customer ratings and feedback",
+      "properties": {
+        "id": { "type": "string" },
+        "customerName": { "type": "string" },
+        "location": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "date": { "type": "string" },
+        "verifiedPurchase": { "type": "boolean" }
+      },
+      "required": ["customerName", "rating", "comment"]
+    },
+    "coupons": {
+      "title": "Coupons",
+      "description": "Discount codes",
+      "properties": {
+        "code": { "type": "string" },
+        "discountPercent": { "type": "number" },
+        "minOrderValue": { "type": "number" },
+        "description": { "type": "string" }
+      },
+      "required": ["code", "discountPercent"]
+    }
+  }
+}
