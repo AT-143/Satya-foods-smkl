@@ -22,9 +22,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const isTe = lang === 'te';
 
   return (
-    <div className="min-h-screen bg-amber-50/40 text-amber-950 flex flex-col font-sans selection:bg-amber-300">
+    <div className="min-h-screen bg-[#fdf8f2] text-[#3e1b12] flex flex-col font-sans selection:bg-amber-300">
       {/* Dedicated Admin Header */}
-      <header className="bg-gradient-to-r from-red-950 via-amber-950 to-red-900 text-amber-100 border-b-2 border-amber-500/40 sticky top-0 z-40 shadow-lg">
+      <header className="bg-gradient-to-r from-[#2a1008] via-red-950 to-[#3e1b12] text-amber-100 border-b-2 border-amber-500/40 sticky top-0 z-40 shadow-md">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           
           {/* Admin Title & Store Name */}
@@ -34,7 +34,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs uppercase tracking-wider font-extrabold text-amber-400 bg-amber-900/60 px-2 py-0.5 rounded border border-amber-400/30">
+                <span className="text-xs uppercase tracking-wider font-extrabold text-amber-300 bg-amber-900/60 px-2 py-0.5 rounded border border-amber-400/30">
                   {isTe ? 'అడ్మిన్ పోర్టల్' : 'Owner Admin Portal'}
                 </span>
                 {isAuthenticated && (
@@ -92,11 +92,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       </main>
 
       {/* Admin Footer */}
-      <footer className="bg-amber-950 text-amber-300/80 text-xs py-4 px-4 border-t border-amber-800/50 text-center">
+      <footer className="bg-[#2a1008] text-amber-200/80 text-xs py-4 px-4 border-t border-amber-900/50 text-center">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>© {new Date().getFullYear()} {STORE_INFO.nameEn} • Secure Store Administrator Panel</p>
           <div className="flex items-center gap-2 text-[11px]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="w-2 h-2 rounded-full bg-[#05a854] animate-pulse"></span>
             <span>System Status: Fully Operational</span>
           </div>
         </div>
