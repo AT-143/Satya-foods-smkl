@@ -284,10 +284,10 @@ export default function App() {
     }
   };
 
-  const handleDeleteProduct = async (id: string) => {
+  const handleDeleteProduct = async (id: string, imageStoragePath?: string) => {
     setProducts((prev) => prev.filter((p) => p.id !== id));
     try {
-      await deleteProductFromDb(id);
+      await deleteProductFromDb(id, imageStoragePath);
     } catch (e) {
       console.error('Error deleting product:', e);
     }

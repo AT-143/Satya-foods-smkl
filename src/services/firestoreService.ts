@@ -7,7 +7,13 @@ import {
   deleteDoc,
   onSnapshot,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from 'firebase/storage';
+import { db, storage } from '../firebase';
 import { Product, Order, Review, Coupon, OrderStatus } from '../types';
 
 // Collections
@@ -15,6 +21,49 @@ const PRODUCTS_COL = 'products';
 const ORDERS_COL = 'orders';
 const REVIEWS_COL = 'reviews';
 const COUPONS_COL = 'coupons';
+
+// ==========================================
+// FIREBASE STORAGE IMAGE MANAGEMENT
+// ==========================================
+
+/**
+ * Uploads a product image file directly to Firebase Storage bucket.
+ * Returns the public download URL and the storage path for reference.
+ */
+export async function uploadProductImageToStorage(
+  file: File,
+  productId: string
+): Promise<{ downloadUrl: string; storagePath: string }> {
+  try {
+    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const storagePath = `products/${productId}_${Date.now()}_${cleanFileName}`;
+    const storageRef = ref(storage, storagePath);
+
+    // Upload image file
+    const snapshot = await uploadBytes(storageRef, file);
+    
+    // Get downloadable public URL
+    const downloadUrl = await getDownloadURL(snapshot.ref);
+
+    return { downloadUrl, storagePath };
+  } catch (err) {
+    console.error('Error uploading product image to Firebase Storage:', err);
+    throw err;
+  }
+}
+
+/**
+ * Deletes a stored product image file from Firebase Storage.
+ */
+export async function deleteProductImageFromStorage(storagePath: string): Promise<void> {
+  if (!storagePath) return;
+  try {
+    const storageRef = ref(storage, storagePath);
+    await deleteObject(storageRef);
+  } catch (err) {
+    console.warn('Could not delete image from Firebase Storage (might already be removed):', err);
+  }
+}
 
 // Subscribe to Products
 export function subscribeProducts(
@@ -48,11 +97,16 @@ export async function saveProductToDb(product: Product) {
   }
 }
 
-// Delete Product
-export async function deleteProductFromDb(productId: string) {
+// Delete Product (and optional Storage image)
+export async function deleteProductFromDb(productId: string, imageStoragePath?: string) {
   try {
     const docRef = doc(db, PRODUCTS_COL, productId);
     await deleteDoc(docRef);
+
+    // If product has a stored image path in Firebase Storage, clean it up
+    if (imageStoragePath) {
+      await deleteProductImageFromStorage(imageStoragePath);
+    }
   } catch (err) {
     console.error('Error deleting product from Firestore:', err);
   }

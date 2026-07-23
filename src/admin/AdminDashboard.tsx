@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Product, Order, OrderStatus, CategoryId, Review, Coupon } from '../types';
 import { formatINR } from '../utils/pricing';
 import { CATEGORIES_DATA, STORE_INFO } from '../data/products';
+import { uploadProductImageToStorage } from '../services/firestoreService';
 import {
   LayoutDashboard,
   Package,
@@ -90,9 +91,10 @@ const compressAndReadImage = (file: File): Promise<string> => {
 interface ImageUploadInputProps {
   label: string;
   currentImage: string;
-  onImageChange: (imageUrl: string) => void;
+  onImageChange: (imageUrl: string, storagePath?: string) => void;
   isTe: boolean;
   imagePresets: { label: string; url: string }[];
+  productId?: string;
 }
 
 const ImageUploadInput: React.FC<ImageUploadInputProps> = ({
@@ -101,23 +103,36 @@ const ImageUploadInput: React.FC<ImageUploadInputProps> = ({
   onImageChange,
   isTe,
   imagePresets,
+  productId,
 }) => {
   const [tab, setTab] = useState<'upload' | 'url'>('upload');
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setIsProcessing(true);
+  const processFile = async (file: File) => {
+    setIsProcessing(true);
+    try {
+      // Attempt upload to Firebase Storage
+      const prodId = productId || `prod-${Date.now()}`;
+      const { downloadUrl, storagePath } = await uploadProductImageToStorage(file, prodId);
+      onImageChange(downloadUrl, storagePath);
+    } catch (err) {
+      console.warn('Firebase Storage upload failed, falling back to local compressed Data URL:', err);
       try {
         const dataUrl = await compressAndReadImage(file);
         onImageChange(dataUrl);
-      } catch (err) {
+      } catch (compressErr) {
         alert(isTe ? 'ఫోటో అప్‌లోడ్ వైఫల్యం' : 'Failed to upload image file');
-      } finally {
-        setIsProcessing(false);
       }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await processFile(file);
     }
   };
 
@@ -126,15 +141,7 @@ const ImageUploadInput: React.FC<ImageUploadInputProps> = ({
     setDragActive(false);
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith('image/')) {
-      setIsProcessing(true);
-      try {
-        const dataUrl = await compressAndReadImage(file);
-        onImageChange(dataUrl);
-      } catch (err) {
-        alert(isTe ? 'ఫోటో అప్‌లోడ్ వైఫల్యం' : 'Failed to upload image file');
-      } finally {
-        setIsProcessing(false);
-      }
+      await processFile(file);
     }
   };
 
@@ -254,7 +261,7 @@ interface AdminDashboardProps {
   onUpdateOrderStatus: (orderId: string, newStatus: OrderStatus) => void;
   onAddProduct: (product: Product) => void;
   onUpdateProduct: (product: Product) => void;
-  onDeleteProduct: (productId: string) => void;
+  onDeleteProduct: (productId: string, imageStoragePath?: string) => void;
   onDeleteReview: (reviewId: string) => void;
   onAddCoupon: (coupon: Coupon) => void;
   onDeleteCoupon: (code: string) => void;
@@ -299,6 +306,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newCategory, setNewCategory] = useState<CategoryId>('powders');
   const [newPrice, setNewPrice] = useState('500');
   const [newImg, setNewImg] = useState('https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&q=80&w=800');
+  const [newStoragePath, setNewStoragePath] = useState<string | undefined>();
   const [newDescTe, setNewDescTe] = useState('');
   const [newDescEn, setNewDescEn] = useState('');
   const [newStock, setNewStock] = useState('50');
@@ -333,6 +341,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       category: newCategory,
       pricePerKg: parseFloat(newPrice),
       image: newImg,
+      imageStoragePath: newStoragePath,
       descriptionTe: newDescTe || 'సామర్లకోట స్వచ్ఛమైన ఉత్పత్తులు.',
       descriptionEn: newDescEn || 'Freshly prepared Samalkot delicacy.',
       ingredientsTe: ['స్వచ్ఛమైన దినుసులు'],
@@ -381,6 +390,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewDescTe('');
     setNewDescEn('');
     setNewStock('50');
+    setNewStoragePath(undefined);
   };
 
   // Metrics
@@ -995,7 +1005,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <button
                         onClick={() => {
                           if (confirm(`Are you sure you want to delete ${prod.nameEn}?`)) {
-                            onDeleteProduct(prod.id);
+                            onDeleteProduct(prod.id, prod.imageStoragePath);
                           }
                         }}
                         className="py-1.5 px-3 bg-red-950/60 hover:bg-red-900 text-red-300 text-xs font-bold rounded-xl border border-red-800/60 flex items-center justify-center gap-1 transition-colors"
@@ -1497,7 +1507,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <ImageUploadInput
                 label={isTe ? 'ఉత్పత్తి ఫోటో (Product Photo)' : 'Product Photo'}
                 currentImage={newImg}
-                onImageChange={setNewImg}
+                onImageChange={(imgUrl, storagePath) => {
+                  setNewImg(imgUrl);
+                  setNewStoragePath(storagePath);
+                }}
                 isTe={isTe}
                 imagePresets={imagePresets}
               />
@@ -1658,8 +1671,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <ImageUploadInput
                 label={isTe ? 'ఉత్పత్తి ఫోటో సవరణ (Product Photo)' : 'Product Photo'}
                 currentImage={editingProduct.image}
-                onImageChange={(imgUrl) =>
-                  setEditingProduct({ ...editingProduct, image: imgUrl })
+                productId={editingProduct.id}
+                onImageChange={(imgUrl, storagePath) =>
+                  setEditingProduct({
+                    ...editingProduct,
+                    image: imgUrl,
+                    imageStoragePath: storagePath || editingProduct.imageStoragePath,
+                  })
                 }
                 isTe={isTe}
                 imagePresets={imagePresets}

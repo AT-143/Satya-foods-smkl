@@ -13,7 +13,7 @@ interface AdminPageProps {
   onUpdateOrderStatus: (orderId: string, status: OrderStatus) => void;
   onAddProduct: (product: Omit<Product, 'id'>) => void;
   onUpdateProduct: (product: Product) => void;
-  onDeleteProduct: (id: string) => void;
+  onDeleteProduct: (id: string, imageStoragePath?: string) => void;
   onDeleteReview: (id: string) => void;
   onAddCoupon: (coupon: Coupon) => void;
   onDeleteCoupon: (code: string) => void;

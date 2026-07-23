@@ -1,4 +1,4 @@
-export type CategoryId = 'all' | 'powders' | 'oils' | 'nonveg_pickles' | 'veg_pickles' | 'sweets' | 'snacks';
+export type CategoryId = 'all' | 'powders' | 'oils' | 'nonveg_pickles' | 'veg_pickles' | 'sweets' | 'snacks' | 'savouries' | 'pickles' | 'ghee' | 'honey' | 'sugarfree';
 
 export type WeightOption = '250g' | '500g' | '1kg';
 
@@ -9,7 +9,8 @@ export interface Product {
   category: CategoryId;
   pricePerKg: number; // base price in INR for 1kg
   isCallForPrice?: boolean;
-  image: string;
+  image: string; // Image URL or Data URL for display
+  imageStoragePath?: string; // Firebase Storage object path e.g. "products/prod_123_photo.jpg"
   descriptionEn: string;
   descriptionTe: string;
   ingredientsEn: string[];
