@@ -23,12 +23,65 @@ const REVIEWS_COL = 'reviews';
 const COUPONS_COL = 'coupons';
 
 // ==========================================
-// FIREBASE STORAGE IMAGE MANAGEMENT
+// FIREBASE STORAGE IMAGE MANAGEMENT & FALLBACK
 // ==========================================
 
 /**
- * Uploads a product image file directly to Firebase Storage bucket.
- * Returns the public download URL and the storage path for reference.
+ * Helper to compress and read local image file into a compact JPEG Data URL.
+ * Used as a zero-CORS-error fallback if Firebase Storage bucket is restricted.
+ */
+export function compressAndCreateDataUrl(
+  file: File,
+  maxSize = 800,
+  quality = 0.82
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      reject(new Error('No file provided'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = Math.round(width);
+        canvas.height = Math.round(height);
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } else {
+          resolve(e.target?.result as string);
+        }
+      };
+      img.onerror = () => reject(new Error('Failed to load image for compression'));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Uploads a product image file to Firebase Storage bucket.
+ * If Firebase Storage is blocked by CORS origin policy or network restrictions,
+ * seamlessly falls back to a lightweight compressed Data URL so image upload never fails.
  */
 export async function uploadProductImageToStorage(
   file: File,
@@ -39,16 +92,23 @@ export async function uploadProductImageToStorage(
     const storagePath = `products/${productId}_${Date.now()}_${cleanFileName}`;
     const storageRef = ref(storage, storagePath);
 
-    // Upload image file
+    // Attempt upload to Firebase Storage bucket
     const snapshot = await uploadBytes(storageRef, file);
-    
-    // Get downloadable public URL
     const downloadUrl = await getDownloadURL(snapshot.ref);
 
     return { downloadUrl, storagePath };
-  } catch (err) {
-    console.error('Error uploading product image to Firebase Storage:', err);
-    throw err;
+  } catch (err: any) {
+    console.warn(
+      'Firebase Storage direct bucket upload encountered CORS/network policy limit. Using compressed Data URL fallback:',
+      err?.message || err
+    );
+    try {
+      const dataUrl = await compressAndCreateDataUrl(file);
+      return { downloadUrl: dataUrl, storagePath: '' };
+    } catch (fallbackErr) {
+      console.error('Data URL fallback compression failed:', fallbackErr);
+      throw err;
+    }
   }
 }
 

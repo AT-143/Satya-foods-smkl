@@ -64,6 +64,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 src={product.image}
                 alt={isTe ? product.nameTe : product.nameEn}
                 className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&q=80&w=600';
+                }}
               />
               <div className="absolute bottom-2 left-2 bg-emerald-900/90 text-emerald-100 text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />

@@ -182,7 +182,12 @@ const ImageUploadInput: React.FC<ImageUploadInputProps> = ({
         {/* Thumbnail Preview */}
         <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white border border-amber-300 shrink-0 relative shadow-xs">
           {currentImage ? (
-            <img src={currentImage} alt="Preview" className="w-full h-full object-cover" />
+            <img
+              src={currentImage}
+              alt="Preview"
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-amber-800/50 text-[9px] font-bold p-1 text-center">
               <Camera className="w-5 h-5 mb-0.5 text-amber-700/60" />
@@ -950,6 +955,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           src={prod.image}
                           alt={prod.nameEn}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&q=80&w=600';
+                          }}
                         />
                         <div className="absolute top-2 left-2 flex flex-col gap-1">
                           {prod.isPureOrganic && (

@@ -50,6 +50,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           alt={isTe ? product.nameTe : product.nameEn}
           className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
           loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&q=80&w=600';
+          }}
         />
         
         {/* Badges */}

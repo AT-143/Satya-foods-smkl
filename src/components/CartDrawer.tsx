@@ -171,6 +171,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     src={item.product.image}
                     alt={pName}
                     className="w-16 h-16 rounded-xl object-cover border border-amber-100 shrink-0"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&q=80&w=600';
+                    }}
                   />
 
                   <div className="flex-1 min-w-0 space-y-1">
